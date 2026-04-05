@@ -11,6 +11,10 @@ import org.junit.Test
 import ru.yandex.loginapp.LoginScreenState
 import ru.yandex.loginapp.LoginViewModel
 
+const val VALID_EMAIL = "somestring@yandex.ru"
+const val INVALID_EMAIL = "somestring"
+const val VALID_PASSWORD = "123456"
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
     private lateinit var viewModelTest: LoginViewModel
@@ -36,14 +40,14 @@ class LoginViewModelTest {
 
     @Test
     fun `wrong email test`() = runTest {
-        viewModelTest.login("somestring", "123456")
+        viewModelTest.login(INVALID_EMAIL, VALID_PASSWORD)
 
         assertEquals(viewModelTest.state.value, LoginScreenState.EmailValidationError)
     }
 
     @Test
     fun `loading test`() = runTest {
-        viewModelTest.login("somestring@yandex.ru", "123456")
+        viewModelTest.login(VALID_EMAIL, VALID_PASSWORD)
 
         testDispatcher.scheduler.runCurrent()
         assertEquals(viewModelTest.state.value, LoginScreenState.Loading)
@@ -51,10 +55,9 @@ class LoginViewModelTest {
 
     @Test
     fun `success test`() = runTest {
-        viewModelTest.login("somestring@yandex.ru", "123456")
+        viewModelTest.login(VALID_EMAIL, VALID_PASSWORD)
 
-        testDispatcher.scheduler.runCurrent()
-        testDispatcher.scheduler.advanceTimeBy(3001)
+        testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(viewModelTest.state.value, LoginScreenState.Success)
     }
 }
