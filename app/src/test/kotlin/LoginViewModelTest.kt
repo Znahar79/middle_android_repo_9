@@ -1,0 +1,63 @@
+import junit.framework.TestCase.assertEquals
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import ru.yandex.loginapp.LoginScreenState
+import ru.yandex.loginapp.LoginViewModel
+
+const val VALID_EMAIL = "somestring@yandex.ru"
+const val INVALID_EMAIL = "somestring"
+const val VALID_PASSWORD = "123456"
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class LoginViewModelTest {
+    private lateinit var viewModelTest: LoginViewModel
+    private val testDispatcher = StandardTestDispatcher()
+
+    @Before
+    fun setUp() {
+        viewModelTest = LoginViewModel()
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `empty fields error test`() = runTest {
+        viewModelTest.login("", "")
+
+        assertEquals(viewModelTest.state.value, LoginScreenState.EmptyFieldsError)
+    }
+
+    @Test
+    fun `wrong email test`() = runTest {
+        viewModelTest.login(INVALID_EMAIL, VALID_PASSWORD)
+
+        assertEquals(viewModelTest.state.value, LoginScreenState.EmailValidationError)
+    }
+
+    @Test
+    fun `loading test`() = runTest {
+        viewModelTest.login(VALID_EMAIL, VALID_PASSWORD)
+
+        testDispatcher.scheduler.runCurrent()
+        assertEquals(viewModelTest.state.value, LoginScreenState.Loading)
+    }
+
+    @Test
+    fun `success test`() = runTest {
+        viewModelTest.login(VALID_EMAIL, VALID_PASSWORD)
+
+        testDispatcher.scheduler.advanceUntilIdle()
+        assertEquals(viewModelTest.state.value, LoginScreenState.Success)
+    }
+}
